@@ -32,6 +32,46 @@ struct ToastPlacementTests {
         #expect(ToastPlacement.bottom == ToastPlacement.bottom)
         #expect(ToastPlacement.top != ToastPlacement.bottom)
     }
+
+    @Test func bottom_dragOffset_tracksOnlyDownwardDrags() {
+        #expect(ToastPlacement.bottom.dragOffset(for: CGSize(width: 0, height: 30)) == 30)
+        #expect(ToastPlacement.bottom.dragOffset(for: CGSize(width: 0, height: -30)) == 0)
+    }
+
+    @Test func top_dragOffset_tracksOnlyUpwardDrags() {
+        #expect(ToastPlacement.top.dragOffset(for: CGSize(width: 0, height: -30)) == -30)
+        #expect(ToastPlacement.top.dragOffset(for: CGSize(width: 0, height: 30)) == 0)
+    }
+
+    @Test func bottom_dismissesWithDownwardDragOrMomentum() {
+        #expect(ToastPlacement.bottom.dismissesToast(
+            translation: CGSize(width: 0, height: 45),
+            predictedEndTranslation: .zero
+        ))
+        #expect(ToastPlacement.bottom.dismissesToast(
+            translation: CGSize(width: 0, height: 10),
+            predictedEndTranslation: CGSize(width: 0, height: 90)
+        ))
+        #expect(!ToastPlacement.bottom.dismissesToast(
+            translation: CGSize(width: 0, height: -90),
+            predictedEndTranslation: CGSize(width: 0, height: -120)
+        ))
+    }
+
+    @Test func top_dismissesWithUpwardDragOrMomentum() {
+        #expect(ToastPlacement.top.dismissesToast(
+            translation: CGSize(width: 0, height: -45),
+            predictedEndTranslation: .zero
+        ))
+        #expect(ToastPlacement.top.dismissesToast(
+            translation: CGSize(width: 0, height: -10),
+            predictedEndTranslation: CGSize(width: 0, height: -90)
+        ))
+        #expect(!ToastPlacement.top.dismissesToast(
+            translation: CGSize(width: 0, height: 90),
+            predictedEndTranslation: CGSize(width: 0, height: 120)
+        ))
+    }
 }
 
 @MainActor

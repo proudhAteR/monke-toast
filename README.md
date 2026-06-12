@@ -164,6 +164,9 @@ toaster.clear(.screen("login"))  // Clears a specific slot
 toaster.clearAll()               // Clears every slot
 ```
 
+Toasts can also be dismissed with a swipe gesture. Bottom toasts dismiss when dragged downward, while top
+toasts dismiss when dragged upward.
+
 When a new toast is shown for the same key, it replaces the existing one and cancels any pending auto-dismiss timer. This prevents stale dismissal tasks from removing the new toast.
 
 ## Platform Adaptations

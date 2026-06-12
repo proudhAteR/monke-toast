@@ -31,6 +31,16 @@ public struct ToastViewConfiguration: Equatable {
     /// Whether the toast should include a manual dismiss button.
     public var dismissButton: Bool = true
 
+    /// Whether the toast should include a manual dismiss button.
+    public var showsDismissButton: Bool {
+        get {
+            dismissButton
+        }
+        set {
+            dismissButton = newValue
+        }
+    }
+
     /// Creates a toast view configuration.
     public init(
         minWidth: CGFloat = 260,
@@ -40,7 +50,7 @@ public struct ToastViewConfiguration: Equatable {
         contentPadding: CGFloat = 14,
         spacing: CGFloat = 10,
         cornerRadius: CGFloat = 14,
-        dismissButton: Bool = false
+        dismissButton: Bool = true
     ) {
         self.minWidth = minWidth
         self.maxWidth = maxWidth
@@ -50,6 +60,29 @@ public struct ToastViewConfiguration: Equatable {
         self.spacing = spacing
         self.cornerRadius = cornerRadius
         self.dismissButton = dismissButton
+    }
+
+    /// Creates a toast view configuration.
+    public init(
+        minWidth: CGFloat = 260,
+        maxWidth: CGFloat = 560,
+        horizontalMargin: CGFloat = 16,
+        edgeMargin: CGFloat = 12,
+        contentPadding: CGFloat = 14,
+        spacing: CGFloat = 10,
+        cornerRadius: CGFloat = 14,
+        showsDismissButton: Bool
+    ) {
+        self.init(
+            minWidth: minWidth,
+            maxWidth: maxWidth,
+            horizontalMargin: horizontalMargin,
+            edgeMargin: edgeMargin,
+            contentPadding: contentPadding,
+            spacing: spacing,
+            cornerRadius: cornerRadius,
+            dismissButton: showsDismissButton
+        )
     }
 }
 
