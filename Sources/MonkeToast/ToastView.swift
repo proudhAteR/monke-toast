@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Visual configuration for a toast banner.
 ///
-/// `ToastViewConfiguration` keeps layout and styling values in one place so `ToastView`, `ToastStack`, and
+/// `ToastViewConfiguration` keeps layout and styling values in one place so `ToastView`, `Loaf`, and
 /// previews can share the same defaults without duplicating hard-coded padding, radius, or width values.
 public struct ToastViewConfiguration: Equatable {
     /// Minimum width of the toast card.
@@ -31,8 +31,26 @@ public struct ToastViewConfiguration: Equatable {
     /// Whether the toast should include a manual dismiss button.
     public var showsDismissButton: Bool = true
 
-    /// Creates a default toast view configuration.
-    public init() {}
+    /// Creates a toast view configuration.
+    public init(
+        minWidth: CGFloat = 260,
+        maxWidth: CGFloat = 560,
+        horizontalMargin: CGFloat = 16,
+        edgeMargin: CGFloat = 12,
+        contentPadding: CGFloat = 14,
+        spacing: CGFloat = 10,
+        cornerRadius: CGFloat = 14,
+        showsDismissButton: Bool = true
+    ) {
+        self.minWidth = minWidth
+        self.maxWidth = maxWidth
+        self.horizontalMargin = horizontalMargin
+        self.edgeMargin = edgeMargin
+        self.contentPadding = contentPadding
+        self.spacing = spacing
+        self.cornerRadius = cornerRadius
+        self.showsDismissButton = showsDismissButton
+    }
 }
 
 /// Renders a single toast presentation.

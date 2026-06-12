@@ -9,14 +9,14 @@ import Foundation
 /// Use the built-in keys for app-wide feedback:
 ///
 /// ```swift
-/// toaster.show(.success("Saved"), for: .global)
+/// toaster.success("Saved", for: .global)
 /// ```
 ///
 /// Use named keys when a feature needs isolated feedback:
 ///
 /// ```swift
 /// let profileToasts = ToastKey.screen("profile")
-/// toaster.show(.error("Could not update profile"), for: profileToasts)
+/// toaster.error("Could not update profile", for: profileToasts)
 /// ```
 public struct ToastKey: Hashable, RawRepresentable, ExpressibleByStringLiteral, CustomStringConvertible, Sendable {
     /// Raw dictionary key used by ``Toaster``.
@@ -40,7 +40,7 @@ public struct ToastKey: Hashable, RawRepresentable, ExpressibleByStringLiteral, 
 
     /// Creates a key from a string literal.
     ///
-    /// This makes APIs such as `toaster.show(.info("Ready"), for: "settings")` possible while still
+    /// This makes APIs such as `toaster.info("Ready", for: "settings")` possible while still
     /// storing strongly typed keys internally.
     ///
     /// - Parameter value: String literal used as the key.

@@ -9,13 +9,13 @@ import Foundation
 /// Use `.automatic` for normal user feedback:
 ///
 /// ```swift
-/// toaster.show(.success("Saved"))
+/// toaster.success("Saved")
 /// ```
 ///
 /// Use `.persistent` for progress or messages that must stay visible until the owning feature clears them:
 ///
 /// ```swift
-/// toaster.show(.loading("Syncing"), duration: .persistent)
+/// toaster.loading("Syncing", duration: .persistent)
 /// ```
 public enum ToastDuration: Equatable {
     /// Uses the toaster's default timeout for finished states and persists loading states.

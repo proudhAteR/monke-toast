@@ -42,20 +42,24 @@ public enum ToastPlacement: Equatable {
     }
 }
 
-/// Displays the active toast for one key.
+/// A SwiftUI host that gives popped toast somewhere to appear.
 ///
-/// `ToastStack` mirrors the keyed approach from Scale.io: each stack listens to one ``ToastKey`` and renders
-/// only that key's current presentation. Install a global stack at the app root, then add more stacks in
-/// specific screens only when a feature needs an isolated toast area.
+/// `Loaf` is the bread-side counterpart to ``Toaster``. The toaster owns the state, timing, replacement,
+/// and dismissal work: it is the thing that makes toast "pop." A loaf is the view-side holder you place in
+/// the SwiftUI hierarchy so the currently popped slice can be rendered on screen.
+///
+/// Each loaf listens to one ``ToastKey`` and renders only that key's current presentation. Install a global
+/// loaf at the app root for app-wide feedback, then add feature-specific loaves only when a screen, tab, or
+/// flow needs its own isolated toast area.
 @available(macOS 14.0, *)
-struct ToastStack: View {
+public struct Loaf: View {
     /// Shared toaster that owns toast state.
     ///
     /// The value is optional so previews and partially assembled root views do not crash if a toaster
-    /// has not been injected yet. Without a toaster, the stack simply renders nothing.
+    /// has not been injected yet. Without a toaster, the loaf simply renders nothing.
     @Environment(Toaster.self) private var toaster: Toaster?
 
-    /// Toast slot rendered by this stack.
+    /// Toast slot rendered by this loaf.
     var key: ToastKey = .global
 
     /// Screen edge where the toast should appear.
@@ -64,7 +68,23 @@ struct ToastStack: View {
     /// Styling values passed to the toast view.
     var configuration = ToastViewConfiguration()
 
-    var body: some View {
+    /// Creates a loaf for one toast slot.
+    ///
+    /// - Parameters:
+    ///   - key: Toast slot to render.
+    ///   - placement: Screen edge where the toast should appear.
+    ///   - configuration: Styling values for the rendered toast.
+    public init(
+        key: ToastKey = .global,
+        placement: ToastPlacement = .bottom,
+        configuration: ToastViewConfiguration = ToastViewConfiguration()
+    ) {
+        self.key = key
+        self.placement = placement
+        self.configuration = configuration
+    }
+
+    public var body: some View {
         let presentation = toaster?.toast(for: key)
 
         Group {
@@ -86,12 +106,12 @@ struct ToastStack: View {
     }
 }
 
-/// Convenience API for installing a toast stack over any view.
+/// Convenience API for installing a loaf over any view.
 extension View {
-    /// Adds a keyed toast overlay to the view.
+    /// Adds a keyed loaf overlay to the view.
     ///
     /// The view must have a ``Toaster`` in the environment. A common setup is to inject ``Toaster/shared``
-    /// in the app entry point and call `.toastStack()` on the root content view. The modified view expands
+    /// in the app entry point and call `.loaf()` on the root content view. The modified view expands
     /// to the available container so the toast is positioned against the screen area instead of the root
     /// view's intrinsic content size.
     ///
@@ -101,14 +121,14 @@ extension View {
     ///   - configuration: Styling values for the rendered toast.
     /// - Returns: A view with a toast overlay.
     @available(macOS 14.0, *)
-    public func toastStack(
+    public func loaf(
         _ key: ToastKey = .global,
         placement: ToastPlacement = .bottom,
         configuration: ToastViewConfiguration = ToastViewConfiguration()
     ) -> some View {
         frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay(alignment: placement.alignment) {
-                ToastStack(
+                Loaf(
                     key: key,
                     placement: placement,
                     configuration: configuration

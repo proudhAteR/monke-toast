@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SwiftUI
 
 /// A single toast presentation stored by ``Toaster``.
 ///
@@ -46,7 +47,7 @@ public struct ToastPresentation: Identifiable, Equatable {
 /// ```swift
 /// WindowGroup {
 ///     ContentView()
-///         .toastStack()
+///         .loaf()
 ///         .environment(Toaster.shared)
 /// }
 /// ```
@@ -56,8 +57,8 @@ public struct ToastPresentation: Identifiable, Equatable {
 /// ```swift
 /// @Environment(Toaster.self) private var toaster
 ///
-/// toaster.show(.success("Saved"))
-/// toaster.show(.loading("Uploading"), duration: .persistent)
+/// toaster.success("Saved")
+/// toaster.loading("Uploading", duration: .persistent)
 /// toaster.clear()
 /// ```
 ///
@@ -106,16 +107,11 @@ public final class Toaster {
         toast(for: ToastKey(key))
     }
 
-    /// Shows a toast for a key.
+    /// Stores a toast for a key.
     ///
-    /// Showing a toast replaces any existing toast under the same key. `.automatic` toasts dismiss after the
-    /// toaster's default timeout, while `.loading` toasts shown with `.automatic` persist until cleared.
-    ///
-    /// - Parameters:
-    ///   - state: Content and visual intent to display.
-    ///   - key: Toast slot that should receive the presentation.
-    ///   - duration: Dismissal policy for the presentation.
-    public func show(
+    /// Public callers use semantic helpers such as ``success(_:for:duration:)`` and
+    /// ``loading(_:for:duration:)`` so feature code describes the feedback it wants to show.
+    private func show(
         _ state: ToastState,
         for key: ToastKey = .global,
         duration: ToastDuration = .automatic
@@ -133,53 +129,136 @@ public final class Toaster {
         scheduleDismissalIfNeeded(for: key, presentation: presentation)
     }
 
-    /// Shows a toast for a string key.
+    /// Shows in-progress feedback.
     ///
-    /// - Parameters:
-    ///   - state: Content and visual intent to display.
-    ///   - key: Raw toast slot that should receive the presentation.
-    ///   - duration: Dismissal policy for the presentation.
-    public func show(
-        _ state: ToastState,
+    /// Loading toasts shown with `.automatic` stay visible until cleared.
+    public func loading(
+        _ message: String,
+        for key: ToastKey = .global,
+        duration: ToastDuration = .automatic
+    ) {
+        show(.loading(message), for: key, duration: duration)
+    }
+
+    /// Shows in-progress feedback for a string key.
+    public func loading(
+        _ message: String,
         for key: String,
         duration: ToastDuration = .automatic
     ) {
-        show(state, for: ToastKey(key), duration: duration)
+        loading(message, for: ToastKey(key), duration: duration)
     }
 
-    /// Shows a toast using Scale.io's original `persist` and `timeout` calling style.
-    ///
-    /// Prefer ``show(_:for:duration:)`` in new code. This overload is provided so code using
-    /// `toast.show(.success("Saved"), key, persist: false, timeout: 3)` can migrate without extra wrappers.
-    ///
-    /// - Parameters:
-    ///   - state: Content and visual intent to display.
-    ///   - key: Toast slot that should receive the presentation.
-    ///   - persist: Whether the toast should stay visible until cleared.
-    ///   - timeout: Number of seconds before automatic dismissal when `persist` is `false`.
-    public func show(
-        _ state: ToastState,
-        _ key: ToastKey,
-        persist: Bool = false,
-        timeout: TimeInterval = 3
+    /// Shows failure feedback.
+    public func error(
+        _ message: String,
+        for key: ToastKey = .global,
+        duration: ToastDuration = .automatic
     ) {
-        show(state, for: key, duration: persist ? .persistent : .seconds(timeout))
+        show(.error(message), for: key, duration: duration)
     }
 
-    /// Shows a toast for a string key using Scale.io's original calling style.
-    ///
-    /// - Parameters:
-    ///   - state: Content and visual intent to display.
-    ///   - key: Raw toast slot that should receive the presentation.
-    ///   - persist: Whether the toast should stay visible until cleared.
-    ///   - timeout: Number of seconds before automatic dismissal when `persist` is `false`.
-    public func show(
-        _ state: ToastState,
-        _ key: String,
-        persist: Bool = false,
-        timeout: TimeInterval = 3
+    /// Shows failure feedback for a string key.
+    public func error(
+        _ message: String,
+        for key: String,
+        duration: ToastDuration = .automatic
     ) {
-        show(state, ToastKey(key), persist: persist, timeout: timeout)
+        error(message, for: ToastKey(key), duration: duration)
+    }
+
+    /// Shows success feedback.
+    public func success(
+        _ message: String,
+        for key: ToastKey = .global,
+        duration: ToastDuration = .automatic
+    ) {
+        show(.success(message), for: key, duration: duration)
+    }
+
+    /// Shows success feedback for a string key.
+    public func success(
+        _ message: String,
+        for key: String,
+        duration: ToastDuration = .automatic
+    ) {
+        success(message, for: ToastKey(key), duration: duration)
+    }
+
+    /// Shows neutral information feedback.
+    public func info(
+        _ message: String,
+        for key: ToastKey = .global,
+        duration: ToastDuration = .automatic
+    ) {
+        show(.info(message), for: key, duration: duration)
+    }
+
+    /// Shows neutral information feedback for a string key.
+    public func info(
+        _ message: String,
+        for key: String,
+        duration: ToastDuration = .automatic
+    ) {
+        info(message, for: ToastKey(key), duration: duration)
+    }
+
+    /// Shows warning feedback.
+    public func warning(
+        _ message: String,
+        for key: ToastKey = .global,
+        duration: ToastDuration = .automatic
+    ) {
+        show(.warning(message), for: key, duration: duration)
+    }
+
+    /// Shows warning feedback for a string key.
+    public func warning(
+        _ message: String,
+        for key: String,
+        duration: ToastDuration = .automatic
+    ) {
+        warning(message, for: ToastKey(key), duration: duration)
+    }
+
+    /// Shows custom feedback with an optional SF Symbol, tint, and progress indicator.
+    public func custom(
+        _ message: String,
+        systemImage: String? = nil,
+        tint: Color = .secondary,
+        showsProgress: Bool = false,
+        for key: ToastKey = .global,
+        duration: ToastDuration = .automatic
+    ) {
+        show(
+            .custom(
+                message: message,
+                systemImage: systemImage,
+                tint: tint,
+                showsProgress: showsProgress
+            ),
+            for: key,
+            duration: duration
+        )
+    }
+
+    /// Shows custom feedback for a string key.
+    public func custom(
+        _ message: String,
+        systemImage: String? = nil,
+        tint: Color = .secondary,
+        showsProgress: Bool = false,
+        for key: String,
+        duration: ToastDuration = .automatic
+    ) {
+        custom(
+            message,
+            systemImage: systemImage,
+            tint: tint,
+            showsProgress: showsProgress,
+            for: ToastKey(key),
+            duration: duration
+        )
     }
 
     /// Clears the toast for a key.

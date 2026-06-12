@@ -14,7 +14,7 @@ Each toast slot holds one presentation at a time — showing a new toast for the
 
 1. Add `MonkeToast` to your project via SPM.
 2. Inject `Toaster.shared` at the app root.
-3. Install a `ToastStack` overlay.
+3. Install a `Loaf` overlay.
 4. Show toasts from anywhere using the environment.
 
 ```swift
@@ -23,7 +23,7 @@ struct MyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .toastStack()
+                .loaf()
                 .environment(Toaster.shared)
         }
     }
@@ -36,7 +36,7 @@ struct ContentView: View {
 
     var body: some View {
         Button("Save") {
-            toaster.show(.success("Profile saved"))
+            toaster.success("Profile saved")
         }
     }
 }
@@ -47,18 +47,26 @@ struct ContentView: View {
 MonkeToast provides six semantic states that encode both the message and the visual intent:
 
 ```swift
-toaster.show(.loading("Uploading"), duration: .persistent)
-toaster.show(.success("Profile saved"))
-toaster.show(.error("Upload failed"), duration: .seconds(5))
-toaster.show(.info("You are back online"))
-toaster.show(.warning("Connection is unstable"))
-toaster.show(.custom(
-    message: "Action completed",
+var toaster : Toaster = .shared
+
+toaster.loading("Uploading", duration: .persistent)
+toaster.success("Profile saved")
+toaster.error("Upload failed", duration: .seconds(5))
+toaster.info("You are back online")
+toaster.warning("Connection is unstable")
+toaster.custom(
+    "Action completed",
     systemImage: "sparkles",
     tint: .blue
-))
+)
 ```
 
+## Loaves
+
+`.loaf()` installs a `Loaf`, the view-side counterpart to `Toaster`. The toaster owns toast state and makes
+new slices pop into existence; a loaf gives the currently popped toast somewhere to appear in your SwiftUI
+hierarchy. Use one global loaf for app-wide feedback, then add feature-specific loaves only when a screen,
+tab, or flow needs isolated feedback.
 
 ## Toast Durations
 
@@ -71,7 +79,7 @@ case persistent   // Stays visible until cleared
 ```
 
 ```swift
-toaster.show(.loading("Syncing"), duration: .persistent)
+toaster.loading("Syncing", duration: .persistent)
 
 // Later, when the work finishes:
 toaster.clear()
@@ -85,7 +93,7 @@ Each toast is scoped to a `ToastKey`. By default toasts are shown on the `.globa
 // Feature-scoped slot
 let profileSlot = ToastKey.screen("profile")
 
-toaster.show(.error("Could not update profile"), for: profileSlot)
+toaster.error("Could not update profile", for: profileSlot)
 ```
 
 Built-in keys:
@@ -100,22 +108,22 @@ ToastKey.tab("settings")           // Tab-scoped slot
 Using string keys is also supported for migration convenience:
 
 ```swift
-toaster.show(.info("Ready"), for: "dashboard")
+toaster.info("Ready", for: "dashboard")
 ```
 
-## Multiple Toast Stacks
+## Multiple Loaves
 
-Install more than one stack when a screen needs its own toast lane:
+Install more than one loaf when a screen needs its own toast lane:
 
 ```swift
 ZStack {
     TabView {
         ProfileView()
-            .toastStack(.screen("profile"), placement: .top)
+            .loaf(.screen("profile"), placement: .top)
         SettingsView()
     }
 }
-.toastStack()  // Global slot
+.loaf()  // Global slot
 ```
 
 ## Configuration
@@ -123,7 +131,7 @@ ZStack {
 Customize the visual appearance with `ToastViewConfiguration`:
 
 ```swift
-.toastStack(configuration: ToastViewConfiguration(
+.loaf(configuration: ToastViewConfiguration(
     minWidth: 300,
     maxWidth: 500,
     showsDismissButton: false
@@ -146,8 +154,8 @@ Customize the visual appearance with `ToastViewConfiguration`:
 Toasts can appear at the top or bottom of the screen:
 
 ```swift
-.toastStack(placement: .top)
-.toastStack(placement: .bottom)  // default
+.loaf(placement: .top)
+.loaf(placement: .bottom)  // default
 ```
 
 ## Clear Behavior

@@ -9,8 +9,8 @@ import SwiftUI
 /// Show a standard state through ``Toaster``:
 ///
 /// ```swift
-/// toaster.show(.success("Profile saved"))
-/// toaster.show(.loading("Uploading"), duration: .persistent)
+/// toaster.success("Profile saved")
+/// toaster.loading("Uploading", duration: .persistent)
 /// ```
 ///
 /// Use `.custom` when a feature needs a specific SF Symbol or tint color while still using the shared toast
