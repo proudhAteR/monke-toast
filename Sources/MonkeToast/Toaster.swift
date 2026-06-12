@@ -5,24 +5,32 @@ import Observation
 ///
 /// `ToastPresentation` is intentionally value-based. The toaster creates a fresh `id` every time a toast is
 /// shown so SwiftUI can animate replacement cleanly, even when two toasts have the same message.
-struct ToastPresentation: Identifiable, Equatable {
+public struct ToastPresentation: Identifiable, Equatable {
     /// Stable identity for this specific presentation.
-    let id: UUID
+    public let id: UUID
 
     /// Semantic content and visual intent shown by the toast view.
-    let state: ToastState
+    public let state: ToastState
 
     /// Duration policy requested by the caller.
-    let duration: ToastDuration
+    public let duration: ToastDuration
 
     /// Resolved auto-dismiss timeout in seconds.
     ///
     /// `nil` means this toast is persistent and must be cleared manually.
-    let timeout: TimeInterval?
+    public let timeout: TimeInterval?
 
     /// Whether this toast stays visible until explicitly cleared.
-    var isPersistent: Bool {
+    public var isPersistent: Bool {
         timeout == nil
+    }
+
+    /// Creates a new toast presentation.
+    public init(id: UUID, state: ToastState, duration: ToastDuration, timeout: TimeInterval?) {
+        self.id = id
+        self.state = state
+        self.duration = duration
+        self.timeout = timeout
     }
 }
 
@@ -58,7 +66,7 @@ struct ToastPresentation: Identifiable, Equatable {
 @available(macOS 14.0, *)
 @MainActor
 @Observable
-final class Toaster {
+public final class Toaster {
     /// Toasts currently visible or waiting to finish their transition.
     private var storage: [ToastKey: ToastPresentation] = [:]
 
@@ -70,7 +78,7 @@ final class Toaster {
     private let defaultTimeout: TimeInterval
     
     /// Shared observable toast coordinator used by the app.
-    static let shared = Toaster()
+    public static let shared = Toaster()
 
     /// Creates a toaster with the default automatic dismissal timeout.
     ///
@@ -84,7 +92,7 @@ final class Toaster {
     ///
     /// - Parameter key: Toast slot to inspect.
     /// - Returns: The current presentation for the key, or `nil` when no toast is visible.
-    func toast(for key: ToastKey = .global) -> ToastPresentation? {
+    public func toast(for key: ToastKey = .global) -> ToastPresentation? {
         storage[key]
     }
 
@@ -94,7 +102,7 @@ final class Toaster {
     ///
     /// - Parameter key: Raw toast slot to inspect.
     /// - Returns: The current presentation for the key, or `nil` when no toast is visible.
-    func toast(for key: String) -> ToastPresentation? {
+    public func toast(for key: String) -> ToastPresentation? {
         toast(for: ToastKey(key))
     }
 
@@ -107,7 +115,7 @@ final class Toaster {
     ///   - state: Content and visual intent to display.
     ///   - key: Toast slot that should receive the presentation.
     ///   - duration: Dismissal policy for the presentation.
-    func show(
+    public func show(
         _ state: ToastState,
         for key: ToastKey = .global,
         duration: ToastDuration = .automatic
@@ -131,7 +139,7 @@ final class Toaster {
     ///   - state: Content and visual intent to display.
     ///   - key: Raw toast slot that should receive the presentation.
     ///   - duration: Dismissal policy for the presentation.
-    func show(
+    public func show(
         _ state: ToastState,
         for key: String,
         duration: ToastDuration = .automatic
@@ -149,7 +157,7 @@ final class Toaster {
     ///   - key: Toast slot that should receive the presentation.
     ///   - persist: Whether the toast should stay visible until cleared.
     ///   - timeout: Number of seconds before automatic dismissal when `persist` is `false`.
-    func show(
+    public func show(
         _ state: ToastState,
         _ key: ToastKey,
         persist: Bool = false,
@@ -165,7 +173,7 @@ final class Toaster {
     ///   - key: Raw toast slot that should receive the presentation.
     ///   - persist: Whether the toast should stay visible until cleared.
     ///   - timeout: Number of seconds before automatic dismissal when `persist` is `false`.
-    func show(
+    public func show(
         _ state: ToastState,
         _ key: String,
         persist: Bool = false,
@@ -177,7 +185,7 @@ final class Toaster {
     /// Clears the toast for a key.
     ///
     /// - Parameter key: Toast slot to clear.
-    func clear(_ key: ToastKey = .global) {
+    public func clear(_ key: ToastKey = .global) {
         cancelDismissal(for: key)
         storage.removeValue(forKey: key)
     }
@@ -185,12 +193,12 @@ final class Toaster {
     /// Clears the toast for a string key.
     ///
     /// - Parameter key: Raw toast slot to clear.
-    func clear(_ key: String) {
+    public func clear(_ key: String) {
         clear(ToastKey(key))
     }
 
     /// Clears every visible toast and cancels all pending dismissals.
-    func clearAll() {
+    public func clearAll() {
         dismissalTasks.values.forEach { $0.cancel() }
         dismissalTasks.removeAll()
         storage.removeAll()

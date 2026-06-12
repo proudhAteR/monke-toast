@@ -18,14 +18,14 @@ import Foundation
 /// let profileToasts = ToastKey.screen("profile")
 /// toaster.show(.error("Could not update profile"), for: profileToasts)
 /// ```
-struct ToastKey: Hashable, RawRepresentable, ExpressibleByStringLiteral, CustomStringConvertible, Sendable {
+public struct ToastKey: Hashable, RawRepresentable, ExpressibleByStringLiteral, CustomStringConvertible, Sendable {
     /// Raw dictionary key used by ``Toaster``.
-    let rawValue: String
+    public let rawValue: String
 
     /// Creates a key from a raw string value.
     ///
     /// - Parameter rawValue: Stable identifier for the toast slot.
-    init(rawValue: String) {
+    public init(rawValue: String) {
         self.rawValue = rawValue
     }
 
@@ -34,7 +34,7 @@ struct ToastKey: Hashable, RawRepresentable, ExpressibleByStringLiteral, CustomS
     /// This convenience initializer keeps call sites short when a custom key is needed.
     ///
     /// - Parameter rawValue: Stable identifier for the toast slot.
-    init(_ rawValue: String) {
+    public init(_ rawValue: String) {
         self.rawValue = rawValue
     }
 
@@ -44,21 +44,21 @@ struct ToastKey: Hashable, RawRepresentable, ExpressibleByStringLiteral, CustomS
     /// storing strongly typed keys internally.
     ///
     /// - Parameter value: String literal used as the key.
-    init(stringLiteral value: String) {
+    public init(stringLiteral value: String) {
         self.rawValue = value
     }
 
     /// Default app-wide toast slot.
-    nonisolated static let global = ToastKey("global:toasts")
+    nonisolated public static let global = ToastKey("global:toasts")
 
     /// Common root-view toast slot.
-    nonisolated static let main = ToastKey("main:toasts")
+    nonisolated public static let main = ToastKey("main:toasts")
 
     /// Creates a feature-scoped toast slot.
     ///
     /// - Parameter name: Screen, feature, or flow name.
     /// - Returns: A key namespaced for screen-level toasts.
-    static func screen(_ name: String) -> ToastKey {
+    public static func screen(_ name: String) -> ToastKey {
         ToastKey("\(name):toasts")
     }
 
@@ -66,12 +66,12 @@ struct ToastKey: Hashable, RawRepresentable, ExpressibleByStringLiteral, CustomS
     ///
     /// - Parameter rawValue: Stable tab identifier.
     /// - Returns: A key namespaced for tab-level toasts.
-    static func tab(_ rawValue: String) -> ToastKey {
+    public static func tab(_ rawValue: String) -> ToastKey {
         ToastKey("\(rawValue):tab:toasts")
     }
 
     /// Human-readable key value used in logs and debug output.
-    var description: String {
+    public var description: String {
         rawValue
     }
 }

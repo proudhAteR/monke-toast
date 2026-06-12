@@ -17,7 +17,7 @@ import Foundation
 /// ```swift
 /// toaster.show(.loading("Syncing"), duration: .persistent)
 /// ```
-enum ToastDuration: Equatable {
+public enum ToastDuration: Equatable {
     /// Uses the toaster's default timeout for finished states and persists loading states.
     case automatic
 
@@ -35,7 +35,7 @@ enum ToastDuration: Equatable {
     ///   - state: Toast state being shown.
     ///   - defaultTimeout: Default timeout used for `.automatic` non-loading states.
     /// - Returns: Number of seconds before dismissal, or `nil` for persistent toasts.
-    func timeout(for state: ToastState, defaultTimeout: TimeInterval) -> TimeInterval? {
+    public func timeout(for state: ToastState, defaultTimeout: TimeInterval) -> TimeInterval? {
         switch self {
         case .automatic:
             return state.isLoading ? nil : defaultTimeout

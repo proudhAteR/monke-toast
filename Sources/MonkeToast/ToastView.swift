@@ -4,32 +4,35 @@ import SwiftUI
 ///
 /// `ToastViewConfiguration` keeps layout and styling values in one place so `ToastView`, `ToastStack`, and
 /// previews can share the same defaults without duplicating hard-coded padding, radius, or width values.
-struct ToastViewConfiguration: Equatable {
+public struct ToastViewConfiguration: Equatable {
     /// Minimum width of the toast card.
     ///
     /// This prevents short messages or narrow parent layouts from collapsing the card into a vertical pill.
-    var minWidth: CGFloat = 260
+    public var minWidth: CGFloat = 260
 
     /// Maximum width of the toast card.
-    var maxWidth: CGFloat = 560
+    public var maxWidth: CGFloat = 560
 
     /// Horizontal spacing from the screen edge.
-    var horizontalMargin: CGFloat = 16
+    public var horizontalMargin: CGFloat = 16
 
     /// Spacing from the top or bottom safe-area edge, depending on placement.
-    var edgeMargin: CGFloat = 12
+    public var edgeMargin: CGFloat = 12
 
     /// Padding inside the toast card.
-    var contentPadding: CGFloat = 14
+    public var contentPadding: CGFloat = 14
 
     /// Space between the leading indicator, message, and dismiss button.
-    var spacing: CGFloat = 10
+    public var spacing: CGFloat = 10
 
     /// Corner radius for the toast card.
-    var cornerRadius: CGFloat = 14
+    public var cornerRadius: CGFloat = 14
 
     /// Whether the toast should include a manual dismiss button.
-    var showsDismissButton: Bool = true
+    public var showsDismissButton: Bool = true
+
+    /// Creates a default toast view configuration.
+    public init() {}
 }
 
 /// Renders a single toast presentation.

@@ -15,7 +15,7 @@ import SwiftUI
 ///
 /// Use `.custom` when a feature needs a specific SF Symbol or tint color while still using the shared toast
 /// rendering and dismissal behavior.
-enum ToastState: Equatable {
+public enum ToastState: Equatable {
     /// In-progress feedback shown with a spinner.
     case loading(String)
 
@@ -40,7 +40,7 @@ enum ToastState: Equatable {
     )
 
     /// Text displayed inside the toast.
-    var message: String {
+    public var message: String {
         switch self {
         case .loading(let message),
              .error(let message),
@@ -56,7 +56,7 @@ enum ToastState: Equatable {
     /// SF Symbol displayed before the message.
     ///
     /// Loading states return `nil` because they use a `ProgressView` instead of an icon.
-    var systemImage: String? {
+    public var systemImage: String? {
         switch self {
         case .loading:
             return nil
@@ -74,7 +74,7 @@ enum ToastState: Equatable {
     }
 
     /// Tint color applied to the leading icon.
-    var tint: Color {
+    public var tint: Color {
         switch self {
         case .loading:
             return .secondary
@@ -92,7 +92,7 @@ enum ToastState: Equatable {
     }
 
     /// Whether the toast should show a spinner instead of an icon.
-    var showsProgress: Bool {
+    public var showsProgress: Bool {
         switch self {
         case .loading:
             return true
@@ -104,7 +104,7 @@ enum ToastState: Equatable {
     }
 
     /// Whether this state represents work that is still in progress.
-    var isLoading: Bool {
+    public var isLoading: Bool {
         if case .loading = self {
             return true
         }
@@ -113,7 +113,7 @@ enum ToastState: Equatable {
     }
 
     /// Accessibility label that combines the toast type and message.
-    var accessibilityLabel: String {
+    public var accessibilityLabel: String {
         "\(accessibilityPrefix): \(message)"
     }
 

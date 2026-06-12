@@ -4,7 +4,7 @@ import SwiftUI
 ///
 /// Use `.bottom` for most feedback because it avoids the status bar and navigation title area. Use `.top`
 /// when the current screen already has important bottom controls.
-enum ToastPlacement: Equatable {
+public enum ToastPlacement: Equatable {
     /// Toast appears near the top safe-area edge.
     case top
 
@@ -12,7 +12,7 @@ enum ToastPlacement: Equatable {
     case bottom
 
     /// SwiftUI overlay alignment for this placement.
-    var alignment: Alignment {
+    public var alignment: Alignment {
         switch self {
         case .top:
             return .top
@@ -22,7 +22,7 @@ enum ToastPlacement: Equatable {
     }
 
     /// Transition edge used when the toast appears or disappears.
-    var transitionEdge: Edge {
+    public var transitionEdge: Edge {
         switch self {
         case .top:
             return .top
@@ -32,7 +32,7 @@ enum ToastPlacement: Equatable {
     }
 
     /// Padding edge that receives the configured edge margin.
-    var paddingEdge: Edge.Set {
+    public var paddingEdge: Edge.Set {
         switch self {
         case .top:
             return .top
@@ -101,7 +101,7 @@ extension View {
     ///   - configuration: Styling values for the rendered toast.
     /// - Returns: A view with a toast overlay.
     @available(macOS 14.0, *)
-    func toastStack(
+    public func toastStack(
         _ key: ToastKey = .global,
         placement: ToastPlacement = .bottom,
         configuration: ToastViewConfiguration = ToastViewConfiguration()
