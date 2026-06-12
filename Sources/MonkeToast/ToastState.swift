@@ -1,5 +1,20 @@
 import SwiftUI
 
+/// Leading visual shown before a toast message.
+public enum ToastIndicator: Equatable {
+    /// Shows no leading visual before the message.
+    case none
+
+    /// Shows a spinner before the message.
+    case progress
+
+    /// Shows an emoji before the message.
+    case emoji(String)
+
+    /// Shows an SF Symbol before the message.
+    case systemImage(String, tint: Color)
+}
+
 /// Describes the content and visual intent of a toast.
 ///
 /// `ToastState` keeps feature code focused on the meaning of the message instead of the exact icon, color,
@@ -11,10 +26,11 @@ import SwiftUI
 /// ```swift
 /// toaster.success("Profile saved")
 /// toaster.loading("Uploading", duration: .persistent)
+/// toaster.custom("Toast is ready", emoji: "🍞")
 /// ```
 ///
-/// Use `.custom` when a feature needs a specific SF Symbol or tint color while still using the shared toast
-/// rendering and dismissal behavior.
+/// Use `.custom` when a feature needs an explicit progress spinner, emoji, or SF Symbol while still using
+/// the shared toast rendering and dismissal behavior.
 public enum ToastState: Equatable {
     /// In-progress feedback shown with a spinner.
     case loading(String)
@@ -31,12 +47,10 @@ public enum ToastState: Equatable {
     /// Warning feedback shown with a warning icon and orange tint.
     case warning(String)
 
-    /// Custom feedback with optional SF Symbol, tint, and progress indicator.
+    /// Custom feedback with an explicit leading indicator.
     case custom(
         message: String,
-        systemImage: String? = nil,
-        tint: Color = .secondary,
-        showsProgress: Bool = false
+        indicator: ToastIndicator
     )
 
     /// Text displayed inside the toast.
@@ -48,8 +62,26 @@ public enum ToastState: Equatable {
              .info(let message),
              .warning(let message):
             return message
-        case .custom(let message, _, _, _):
+        case .custom(let message, _):
             return message
+        }
+    }
+
+    /// Leading visual displayed before the message.
+    public var indicator: ToastIndicator {
+        switch self {
+        case .loading:
+            return .progress
+        case .error:
+            return .systemImage("xmark.octagon.fill", tint: .red)
+        case .success:
+            return .systemImage("checkmark.circle.fill", tint: .green)
+        case .info:
+            return .systemImage("info.circle.fill", tint: .secondary)
+        case .warning:
+            return .systemImage("exclamationmark.triangle.fill", tint: .orange)
+        case .custom(_, let indicator):
+            return indicator
         }
     }
 
@@ -57,50 +89,38 @@ public enum ToastState: Equatable {
     ///
     /// Loading states return `nil` because they use a `ProgressView` instead of an icon.
     public var systemImage: String? {
-        switch self {
-        case .loading:
-            return nil
-        case .error:
-            return "xmark.octagon.fill"
-        case .success:
-            return "checkmark.circle.fill"
-        case .info:
-            return "info.circle.fill"
-        case .warning:
-            return "exclamationmark.triangle.fill"
-        case .custom(_, let systemImage, _, _):
+        if case .systemImage(let systemImage, _) = indicator {
             return systemImage
         }
+
+        return nil
+    }
+
+    /// Emoji displayed before the message.
+    public var emoji: String? {
+        if case .emoji(let emoji) = indicator {
+            return emoji
+        }
+
+        return nil
     }
 
     /// Tint color applied to the leading icon.
     public var tint: Color {
-        switch self {
-        case .loading:
-            return .secondary
-        case .error:
-            return .red
-        case .success:
-            return .green
-        case .info:
-            return .secondary
-        case .warning:
-            return .orange
-        case .custom(_, _, let tint, _):
+        if case .systemImage(_, let tint) = indicator {
             return tint
         }
+
+        return .secondary
     }
 
     /// Whether the toast should show a spinner instead of an icon.
     public var showsProgress: Bool {
-        switch self {
-        case .loading:
+        if case .progress = indicator {
             return true
-        case .custom(_, _, _, let showsProgress):
-            return showsProgress
-        default:
-            return false
         }
+
+        return false
     }
 
     /// Whether this state represents work that is still in progress.

@@ -26,13 +26,18 @@ struct ToastStateTests {
     }
 
     @Test func message_custom() {
-        let state = ToastState.custom(message: "Custom msg", systemImage: "star", tint: .blue)
+        let state = ToastState.custom(message: "Custom msg", indicator: .systemImage("star", tint: .blue))
         #expect(state.message == "Custom msg")
     }
 
     @Test func message_customMinimum() {
-        let state = ToastState.custom(message: "Minimal")
+        let state = ToastState.custom(message: "Minimal", indicator: .none)
         #expect(state.message == "Minimal")
+    }
+
+    @Test func indicator_custom() {
+        let state = ToastState.custom(message: "Custom", indicator: .emoji("🍞"))
+        #expect(state.indicator == .emoji("🍞"))
     }
 
     @Test func message_empty() {
@@ -62,18 +67,35 @@ struct ToastStateTests {
     }
 
     @Test func systemImage_custom_withImage() {
-        let state = ToastState.custom(message: "Custom", systemImage: "sparkles")
+        let state = ToastState.custom(message: "Custom", indicator: .systemImage("sparkles", tint: .secondary))
         #expect(state.systemImage == "sparkles")
     }
 
     @Test func systemImage_custom_withoutImage_isNil() {
-        let state = ToastState.custom(message: "Custom")
+        let state = ToastState.custom(message: "Custom", indicator: .none)
         #expect(state.systemImage == nil)
     }
 
-    @Test func systemImage_custom_withNilImage_explicitly() {
-        let state = ToastState.custom(message: "Custom", systemImage: nil)
+    @Test func systemImage_custom_withEmoji_isNil() {
+        let state = ToastState.custom(message: "Custom", indicator: .emoji("🍞"))
         #expect(state.systemImage == nil)
+    }
+
+    // MARK: - Emoji
+
+    @Test func emoji_standardStates_areNil() {
+        #expect(ToastState.loading("Work").emoji == nil)
+        #expect(ToastState.success("OK").emoji == nil)
+    }
+
+    @Test func emoji_custom_withEmoji() {
+        let state = ToastState.custom(message: "Custom", indicator: .emoji("🍞"))
+        #expect(state.emoji == "🍞")
+    }
+
+    @Test func emoji_custom_withSystemImage_isNil() {
+        let state = ToastState.custom(message: "Custom", indicator: .systemImage("sparkles", tint: .secondary))
+        #expect(state.emoji == nil)
     }
 
     // MARK: - Tint Color
@@ -99,12 +121,12 @@ struct ToastStateTests {
     }
 
     @Test func tint_custom_withCustomColor() {
-        let state = ToastState.custom(message: "Custom", systemImage: "star", tint: .purple)
+        let state = ToastState.custom(message: "Custom", indicator: .systemImage("star", tint: .purple))
         #expect(state.tint == .purple)
     }
 
     @Test func tint_custom_defaultIsSecondary() {
-        let state = ToastState.custom(message: "Custom")
+        let state = ToastState.custom(message: "Custom", indicator: .none)
         #expect(state.tint == .secondary)
     }
 
@@ -131,17 +153,17 @@ struct ToastStateTests {
     }
 
     @Test func showsProgress_custom_withProgress_isTrue() {
-        let state = ToastState.custom(message: "Work", showsProgress: true)
+        let state = ToastState.custom(message: "Work", indicator: .progress)
         #expect(state.showsProgress == true)
     }
 
     @Test func showsProgress_custom_withoutProgress_isFalse() {
-        let state = ToastState.custom(message: "Done", showsProgress: false)
+        let state = ToastState.custom(message: "Done", indicator: .none)
         #expect(state.showsProgress == false)
     }
 
     @Test func showsProgress_custom_defaultIsFalse() {
-        let state = ToastState.custom(message: "Default")
+        let state = ToastState.custom(message: "Default", indicator: .emoji("🍞"))
         #expect(state.showsProgress == false)
     }
 
@@ -168,12 +190,12 @@ struct ToastStateTests {
     }
 
     @Test func isLoading_customWithoutProgress_isFalse() {
-        let state = ToastState.custom(message: "Custom")
+        let state = ToastState.custom(message: "Custom", indicator: .none)
         #expect(state.isLoading == false)
     }
 
     @Test func isLoading_customWithProgress_isFalse() {
-        let state = ToastState.custom(message: "Custom", showsProgress: true)
+        let state = ToastState.custom(message: "Custom", indicator: .progress)
         #expect(state.isLoading == false)
     }
 
@@ -200,7 +222,7 @@ struct ToastStateTests {
     }
 
     @Test func accessibilityLabel_custom() {
-        let state = ToastState.custom(message: "Action done")
+        let state = ToastState.custom(message: "Action done", indicator: .emoji("🍞"))
         #expect(state.accessibilityLabel == "Message: Action done")
     }
 
@@ -227,26 +249,32 @@ struct ToastStateTests {
     }
 
     @Test func customStates_withSameValues_areEqual() {
-        let a = ToastState.custom(message: "Hi", systemImage: "star", tint: .blue, showsProgress: false)
-        let b = ToastState.custom(message: "Hi", systemImage: "star", tint: .blue, showsProgress: false)
+        let a = ToastState.custom(message: "Hi", indicator: .systemImage("star", tint: .blue))
+        let b = ToastState.custom(message: "Hi", indicator: .systemImage("star", tint: .blue))
         #expect(a == b)
     }
 
     @Test func customStates_withDifferentTints_areNotEqual() {
-        let a = ToastState.custom(message: "Hi", tint: .blue)
-        let b = ToastState.custom(message: "Hi", tint: .red)
+        let a = ToastState.custom(message: "Hi", indicator: .systemImage("star", tint: .blue))
+        let b = ToastState.custom(message: "Hi", indicator: .systemImage("star", tint: .red))
         #expect(a != b)
     }
 
     @Test func customStates_withDifferentProgress_areNotEqual() {
-        let a = ToastState.custom(message: "Hi", showsProgress: true)
-        let b = ToastState.custom(message: "Hi", showsProgress: false)
+        let a = ToastState.custom(message: "Hi", indicator: .progress)
+        let b = ToastState.custom(message: "Hi", indicator: .none)
         #expect(a != b)
     }
 
     @Test func customStates_withDifferentImages_areNotEqual() {
-        let a = ToastState.custom(message: "Hi", systemImage: "star")
-        let b = ToastState.custom(message: "Hi", systemImage: "moon")
+        let a = ToastState.custom(message: "Hi", indicator: .systemImage("star", tint: .secondary))
+        let b = ToastState.custom(message: "Hi", indicator: .systemImage("moon", tint: .secondary))
+        #expect(a != b)
+    }
+
+    @Test func customStates_withDifferentEmojis_areNotEqual() {
+        let a = ToastState.custom(message: "Hi", indicator: .emoji("🍞"))
+        let b = ToastState.custom(message: "Hi", indicator: .emoji("✨"))
         #expect(a != b)
     }
 }

@@ -54,11 +54,9 @@ toaster.success("Profile saved")
 toaster.error("Upload failed", duration: .seconds(5))
 toaster.info("You are back online")
 toaster.warning("Connection is unstable")
-toaster.custom(
-    "Action completed",
-    systemImage: "sparkles",
-    tint: .blue
-)
+toaster.custom("Still baking", progress: true)
+toaster.custom("Toast is ready", emoji: "🍞")
+toaster.custom("Action completed", systemImage: "sparkles", tint: .blue)
 ```
 
 ## Loaves

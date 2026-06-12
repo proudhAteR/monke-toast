@@ -221,44 +221,73 @@ public final class Toaster {
         warning(message, for: ToastKey(key), duration: duration)
     }
 
-    /// Shows custom feedback with an optional SF Symbol, tint, and progress indicator.
+    /// Shows custom feedback with a progress spinner.
+    ///
+    /// Pass `true` to show a spinner before the message. Passing `false` omits the leading indicator.
     public func custom(
         _ message: String,
-        systemImage: String? = nil,
+        progress: Bool,
+        for key: ToastKey = .global,
+        duration: ToastDuration = .automatic
+    ) {
+        let indicator: ToastIndicator = progress ? .progress : .none
+        show(.custom(message: message, indicator: indicator), for: key, duration: duration)
+    }
+
+    /// Shows custom feedback with a progress spinner for a string key.
+    public func custom(
+        _ message: String,
+        progress: Bool,
+        for key: String,
+        duration: ToastDuration = .automatic
+    ) {
+        custom(message, progress: progress, for: ToastKey(key), duration: duration)
+    }
+
+    /// Shows custom feedback with an emoji.
+    public func custom(
+        _ message: String,
+        emoji: String,
+        for key: ToastKey = .global,
+        duration: ToastDuration = .automatic
+    ) {
+        show(.custom(message: message, indicator: .emoji(emoji)), for: key, duration: duration)
+    }
+
+    /// Shows custom feedback with an emoji for a string key.
+    public func custom(
+        _ message: String,
+        emoji: String,
+        for key: String,
+        duration: ToastDuration = .automatic
+    ) {
+        custom(message, emoji: emoji, for: ToastKey(key), duration: duration)
+    }
+
+    /// Shows custom feedback with an SF Symbol.
+    public func custom(
+        _ message: String,
+        systemImage: String,
         tint: Color = .secondary,
-        showsProgress: Bool = false,
         for key: ToastKey = .global,
         duration: ToastDuration = .automatic
     ) {
         show(
-            .custom(
-                message: message,
-                systemImage: systemImage,
-                tint: tint,
-                showsProgress: showsProgress
-            ),
+            .custom(message: message, indicator: .systemImage(systemImage, tint: tint)),
             for: key,
             duration: duration
         )
     }
 
-    /// Shows custom feedback for a string key.
+    /// Shows custom feedback with an SF Symbol for a string key.
     public func custom(
         _ message: String,
-        systemImage: String? = nil,
+        systemImage: String,
         tint: Color = .secondary,
-        showsProgress: Bool = false,
         for key: String,
         duration: ToastDuration = .automatic
     ) {
-        custom(
-            message,
-            systemImage: systemImage,
-            tint: tint,
-            showsProgress: showsProgress,
-            for: ToastKey(key),
-            duration: duration
-        )
+        custom(message, systemImage: systemImage, tint: tint, for: ToastKey(key), duration: duration)
     }
 
     /// Clears the toast for a key.

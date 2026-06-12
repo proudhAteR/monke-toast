@@ -20,7 +20,7 @@ public struct ToastViewConfiguration: Equatable {
     public var edgeMargin: CGFloat = 12
 
     /// Padding inside the toast card.
-    public var contentPadding: CGFloat = 14
+    public var contentPadding: CGFloat = 12
 
     /// Space between the leading indicator, message, and dismiss button.
     public var spacing: CGFloat = 10
@@ -29,7 +29,7 @@ public struct ToastViewConfiguration: Equatable {
     public var cornerRadius: CGFloat = 14
 
     /// Whether the toast should include a manual dismiss button.
-    public var showsDismissButton: Bool = true
+    public var dismissButton: Bool = true
 
     /// Creates a toast view configuration.
     public init(
@@ -40,7 +40,7 @@ public struct ToastViewConfiguration: Equatable {
         contentPadding: CGFloat = 14,
         spacing: CGFloat = 10,
         cornerRadius: CGFloat = 14,
-        showsDismissButton: Bool = true
+        dismissButton: Bool = false
     ) {
         self.minWidth = minWidth
         self.maxWidth = maxWidth
@@ -49,7 +49,7 @@ public struct ToastViewConfiguration: Equatable {
         self.contentPadding = contentPadding
         self.spacing = spacing
         self.cornerRadius = cornerRadius
-        self.showsDismissButton = showsDismissButton
+        self.dismissButton = dismissButton
     }
 }
 
@@ -69,7 +69,7 @@ struct ToastView: View {
     var onDismiss: (() -> Void)?
 
     var body: some View {
-        HStack(alignment: .top, spacing: configuration.spacing) {
+        HStack(alignment: .center, spacing: configuration.spacing) {
             leadingIndicator
 
             Text(presentation.state.message)
@@ -91,18 +91,27 @@ struct ToastView: View {
         .accessibilityLabel(presentation.state.accessibilityLabel)
     }
 
-    /// Leading spinner or SF Symbol for the toast state.
+    /// Leading progress spinner, emoji, or SF Symbol for the toast state.
     @ViewBuilder
     private var leadingIndicator: some View {
-        if presentation.state.showsProgress {
+        switch presentation.state.indicator {
+        case .none:
+            EmptyView()
+        case .progress:
             ProgressView()
                 .controlSize(.regular)
-                .padding(.top, 1)
-        } else if let systemImage = presentation.state.systemImage {
+                .frame(width: 18, height: 24)
+        case .emoji(let emoji):
+            Text(emoji)
+                .font(.subheadline)
+                .lineLimit(1)
+                .frame(width: 18, height: 24)
+                .accessibilityHidden(true)
+        case .systemImage(let systemImage, let tint):
             Image(systemName: systemImage)
                 .font(.subheadline)
-                .foregroundStyle(presentation.state.tint)
-                .padding(.top, 1)
+                .foregroundStyle(tint)
+                .frame(width: 18, height: 24)
                 .accessibilityHidden(true)
         }
     }
@@ -110,7 +119,7 @@ struct ToastView: View {
     /// Optional manual dismiss button.
     @ViewBuilder
     private var dismissButton: some View {
-        if configuration.showsDismissButton, let onDismiss {
+        if configuration.dismissButton, let onDismiss {
             Button(action: onDismiss) {
                 Image(systemName: "xmark")
                     .font(.caption.weight(.bold))
@@ -175,8 +184,7 @@ private extension View {
             presentation: .preview(
                 .custom(
                     message: "Custom toast with its own icon.",
-                    systemImage: "sparkles",
-                    tint: .blue
+                    indicator: .systemImage("sparkles", tint: .blue)
                 )
             )
         )

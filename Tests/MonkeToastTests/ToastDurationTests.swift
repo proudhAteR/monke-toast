@@ -24,14 +24,14 @@ struct ToastDurationTests {
 
     @Test func automatic_withCustomShowsProgress_usesDefaultTimeout() {
         let duration = ToastDuration.automatic
-        let state = ToastState.custom(message: "Working", showsProgress: true)
+        let state = ToastState.custom(message: "Working", indicator: .progress)
         let timeout = duration.timeout(for: state, defaultTimeout: 3)
         #expect(timeout == 3)
     }
 
     @Test func automatic_withCustomNoProgress_returnsDefaultTimeout() {
         let duration = ToastDuration.automatic
-        let state = ToastState.custom(message: "Done", systemImage: "star", tint: .yellow)
+        let state = ToastState.custom(message: "Done", indicator: .systemImage("star", tint: .yellow))
         let timeout = duration.timeout(for: state, defaultTimeout: 4)
         #expect(timeout == 4)
     }
@@ -77,7 +77,7 @@ struct ToastDurationTests {
         #expect(duration.timeout(for: .error("Fail"), defaultTimeout: 3) == nil)
         #expect(duration.timeout(for: .info("Info"), defaultTimeout: 3) == nil)
         #expect(duration.timeout(for: .warning("Warn"), defaultTimeout: 3) == nil)
-        #expect(duration.timeout(for: .custom(message: "Custom"), defaultTimeout: 3) == nil)
+        #expect(duration.timeout(for: .custom(message: "Custom", indicator: .emoji("🍞")), defaultTimeout: 3) == nil)
     }
 
     // MARK: - Equatable

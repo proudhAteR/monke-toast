@@ -67,26 +67,39 @@ struct ToasterTests {
         #expect(toaster.toast(for: dashboardKey)?.isPersistent == true)
     }
 
-    @Test func customConvenienceHelper_buildsCustomState() {
+    @Test func customConvenienceHelper_withProgress_buildsCustomState() {
         toaster.custom(
-            "Action completed",
-            systemImage: "sparkles",
-            tint: .purple,
-            showsProgress: true,
+            "Still baking",
+            progress: true,
             duration: .persistent
         )
 
         let toast = toaster.toast(for: .global)
+        #expect(toast?.state == .custom(message: "Still baking", indicator: .progress))
+        #expect(toast?.state.showsProgress == true)
+        #expect(toast?.isPersistent == true)
+    }
+
+    @Test func customConvenienceHelper_withEmoji_buildsCustomState() {
+        toaster.custom("Toast is ready", emoji: "🍞", for: "bakery")
+
+        let toast = toaster.toast(for: "bakery")
+        #expect(toast?.state == .custom(message: "Toast is ready", indicator: .emoji("🍞")))
+        #expect(toast?.state.emoji == "🍞")
+        #expect(toast?.state.systemImage == nil)
+    }
+
+    @Test func customConvenienceHelper_withSystemImage_buildsCustomState() {
+        toaster.custom("Action completed", systemImage: "sparkles", tint: .purple)
+
+        let toast = toaster.toast(for: .global)
         #expect(toast?.state == .custom(
             message: "Action completed",
-            systemImage: "sparkles",
-            tint: .purple,
-            showsProgress: true
+            indicator: .systemImage("sparkles", tint: .purple)
         ))
         #expect(toast?.state.systemImage == "sparkles")
         #expect(toast?.state.tint == .purple)
-        #expect(toast?.state.showsProgress == true)
-        #expect(toast?.isPersistent == true)
+        #expect(toast?.state.showsProgress == false)
     }
 
     // MARK: - Replacement
