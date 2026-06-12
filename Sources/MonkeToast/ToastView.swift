@@ -50,7 +50,7 @@ public struct ToastViewConfiguration: Equatable {
         contentPadding: CGFloat = 14,
         spacing: CGFloat = 10,
         cornerRadius: CGFloat = 14,
-        dismissButton: Bool = true
+        dismissButton: Bool = false
     ) {
         self.minWidth = minWidth
         self.maxWidth = maxWidth

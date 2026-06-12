@@ -132,7 +132,7 @@ Customize the visual appearance with `ToastViewConfiguration`:
 .loaf(configuration: ToastViewConfiguration(
     minWidth: 300,
     maxWidth: 500,
-    showsDismissButton: false
+    dismissButton: false
 ))
 ```
 
@@ -145,7 +145,7 @@ Customize the visual appearance with `ToastViewConfiguration`:
 | `contentPadding` | `14` |
 | `spacing` | `10` |
 | `cornerRadius` | `14` |
-| `showsDismissButton` | `true` |
+| `dismissButton` | `true` |
 
 ## Placement
 
