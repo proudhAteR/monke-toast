@@ -1,0 +1,244 @@
+import Foundation
+import Observation
+
+/// A single toast presentation stored by ``Toaster``.
+///
+/// `ToastPresentation` is intentionally value-based. The toaster creates a fresh `id` every time a toast is
+/// shown so SwiftUI can animate replacement cleanly, even when two toasts have the same message.
+struct ToastPresentation: Identifiable, Equatable {
+    /// Stable identity for this specific presentation.
+    let id: UUID
+
+    /// Semantic content and visual intent shown by the toast view.
+    let state: ToastState
+
+    /// Duration policy requested by the caller.
+    let duration: ToastDuration
+
+    /// Resolved auto-dismiss timeout in seconds.
+    ///
+    /// `nil` means this toast is persistent and must be cleared manually.
+    let timeout: TimeInterval?
+
+    /// Whether this toast stays visible until explicitly cleared.
+    var isPersistent: Bool {
+        timeout == nil
+    }
+}
+
+/// Coordinates toast state for the whole app.
+///
+/// `Toaster` is the app-wide toast coordinator. It is a port of Scale.io's keyed toast view model, with
+/// dismissal scheduling kept inside the service so SwiftUI views only render the current state. The toaster
+/// stores one toast per ``ToastKey``. Showing a new toast for the same key replaces the previous one and
+/// cancels its pending dismissal.
+///
+/// Inject the shared instance near the app root so any feature can request feedback:
+///
+/// ```swift
+/// WindowGroup {
+///     ContentView()
+///         .toastStack()
+///         .environment(Toaster.shared)
+/// }
+/// ```
+///
+/// Feature views can then request feedback without knowing where the toast is rendered:
+///
+/// ```swift
+/// @Environment(Toaster.self) private var toaster
+///
+/// toaster.show(.success("Saved"))
+/// toaster.show(.loading("Uploading"), duration: .persistent)
+/// toaster.clear()
+/// ```
+///
+/// `Toaster` is a singleton. Use ``shared`` everywhere the app needs to show, inspect, or clear toast
+/// state.
+@available(macOS 14.0, *)
+@MainActor
+@Observable
+final class Toaster {
+    /// Toasts currently visible or waiting to finish their transition.
+    private var storage: [ToastKey: ToastPresentation] = [:]
+
+    /// Auto-dismiss tasks keyed by toast slot.
+    @ObservationIgnored
+    private var dismissalTasks: [ToastKey: Task<Void, Never>] = [:]
+
+    /// Default timeout used by `.automatic` non-loading toasts.
+    private let defaultTimeout: TimeInterval
+    
+    /// Shared observable toast coordinator used by the app.
+    static let shared = Toaster()
+
+    /// Creates a toaster with the default automatic dismissal timeout.
+    ///
+    /// Use ``shared`` in production code. The initializer is ``internal`` so tests
+    /// can create isolated instances via `@testable import`.
+    init() {
+        self.defaultTimeout = 3
+    }
+
+    /// Returns the active toast for a key.
+    ///
+    /// - Parameter key: Toast slot to inspect.
+    /// - Returns: The current presentation for the key, or `nil` when no toast is visible.
+    func toast(for key: ToastKey = .global) -> ToastPresentation? {
+        storage[key]
+    }
+
+    /// Returns the active toast for a string key.
+    ///
+    /// This overload keeps migration from string-based toast systems simple.
+    ///
+    /// - Parameter key: Raw toast slot to inspect.
+    /// - Returns: The current presentation for the key, or `nil` when no toast is visible.
+    func toast(for key: String) -> ToastPresentation? {
+        toast(for: ToastKey(key))
+    }
+
+    /// Shows a toast for a key.
+    ///
+    /// Showing a toast replaces any existing toast under the same key. `.automatic` toasts dismiss after the
+    /// toaster's default timeout, while `.loading` toasts shown with `.automatic` persist until cleared.
+    ///
+    /// - Parameters:
+    ///   - state: Content and visual intent to display.
+    ///   - key: Toast slot that should receive the presentation.
+    ///   - duration: Dismissal policy for the presentation.
+    func show(
+        _ state: ToastState,
+        for key: ToastKey = .global,
+        duration: ToastDuration = .automatic
+    ) {
+        cancelDismissal(for: key)
+
+        let presentation = ToastPresentation(
+            id: UUID(),
+            state: state,
+            duration: duration,
+            timeout: duration.timeout(for: state, defaultTimeout: defaultTimeout)
+        )
+
+        storage[key] = presentation
+        scheduleDismissalIfNeeded(for: key, presentation: presentation)
+    }
+
+    /// Shows a toast for a string key.
+    ///
+    /// - Parameters:
+    ///   - state: Content and visual intent to display.
+    ///   - key: Raw toast slot that should receive the presentation.
+    ///   - duration: Dismissal policy for the presentation.
+    func show(
+        _ state: ToastState,
+        for key: String,
+        duration: ToastDuration = .automatic
+    ) {
+        show(state, for: ToastKey(key), duration: duration)
+    }
+
+    /// Shows a toast using Scale.io's original `persist` and `timeout` calling style.
+    ///
+    /// Prefer ``show(_:for:duration:)`` in new code. This overload is provided so code using
+    /// `toast.show(.success("Saved"), key, persist: false, timeout: 3)` can migrate without extra wrappers.
+    ///
+    /// - Parameters:
+    ///   - state: Content and visual intent to display.
+    ///   - key: Toast slot that should receive the presentation.
+    ///   - persist: Whether the toast should stay visible until cleared.
+    ///   - timeout: Number of seconds before automatic dismissal when `persist` is `false`.
+    func show(
+        _ state: ToastState,
+        _ key: ToastKey,
+        persist: Bool = false,
+        timeout: TimeInterval = 3
+    ) {
+        show(state, for: key, duration: persist ? .persistent : .seconds(timeout))
+    }
+
+    /// Shows a toast for a string key using Scale.io's original calling style.
+    ///
+    /// - Parameters:
+    ///   - state: Content and visual intent to display.
+    ///   - key: Raw toast slot that should receive the presentation.
+    ///   - persist: Whether the toast should stay visible until cleared.
+    ///   - timeout: Number of seconds before automatic dismissal when `persist` is `false`.
+    func show(
+        _ state: ToastState,
+        _ key: String,
+        persist: Bool = false,
+        timeout: TimeInterval = 3
+    ) {
+        show(state, ToastKey(key), persist: persist, timeout: timeout)
+    }
+
+    /// Clears the toast for a key.
+    ///
+    /// - Parameter key: Toast slot to clear.
+    func clear(_ key: ToastKey = .global) {
+        cancelDismissal(for: key)
+        storage.removeValue(forKey: key)
+    }
+
+    /// Clears the toast for a string key.
+    ///
+    /// - Parameter key: Raw toast slot to clear.
+    func clear(_ key: String) {
+        clear(ToastKey(key))
+    }
+
+    /// Clears every visible toast and cancels all pending dismissals.
+    func clearAll() {
+        dismissalTasks.values.forEach { $0.cancel() }
+        dismissalTasks.removeAll()
+        storage.removeAll()
+    }
+
+    /// Clears a toast only if it still matches the expected presentation.
+    ///
+    /// This prevents an old dismissal task from removing a newer toast that reused the same key.
+    ///
+    /// - Parameters:
+    ///   - key: Toast slot to clear.
+    ///   - id: Presentation id that must still be active.
+    private func clear(_ key: ToastKey, matching id: UUID) {
+        guard storage[key]?.id == id else { return }
+        clear(key)
+    }
+
+    /// Schedules automatic dismissal for non-persistent toasts.
+    ///
+    /// - Parameters:
+    ///   - key: Toast slot to dismiss.
+    ///   - presentation: Presentation being scheduled.
+    private func scheduleDismissalIfNeeded(for key: ToastKey, presentation: ToastPresentation) {
+        guard let timeout = presentation.timeout else { return }
+
+        dismissalTasks[key] = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: Self.nanoseconds(for: timeout))
+            guard !Task.isCancelled else { return }
+            self?.clear(key, matching: presentation.id)
+        }
+    }
+
+    /// Cancels a pending dismissal for a key.
+    ///
+    /// - Parameter key: Toast slot whose task should be cancelled.
+    private func cancelDismissal(for key: ToastKey) {
+        dismissalTasks[key]?.cancel()
+        dismissalTasks[key] = nil
+    }
+
+    /// Converts seconds to nanoseconds for `Task.sleep`.
+    ///
+    /// - Parameter seconds: Delay in seconds.
+    /// - Returns: Delay clamped to the representable `UInt64` nanosecond range.
+    private static func nanoseconds(for seconds: TimeInterval) -> UInt64 {
+        let maxSeconds = TimeInterval(UInt64.max) / 1_000_000_000
+        let clampedSeconds = min(max(seconds, 0), maxSeconds)
+
+        return UInt64(clampedSeconds * 1_000_000_000)
+    }
+}
